@@ -62,7 +62,17 @@ TEST(tile_gpu, basic_in1x2x2x2_axis_b) {
 
     topology topology;
     topology.add(input_layout("input", input->get_layout()));
-    topology.add(tile("tile", "input", tensor(2, 2, 2, 2)));
+
+    // reorder plain -> block
+    auto data_type = data_types::f32;
+    const auto target_format = format::b_fs_yx_fsv32;
+    topology.add(reorder("reordered_input", "input", target_format, data_type));
+
+    topology.add(tile("block_tile", "reordered_input", tensor(2, 2, 2, 2)));
+
+    // reorder block -> plain
+    const auto plain_format = format::bfyx;
+    topology.add(reorder("tile", "block_tile", plain_format, data_type));
 
     std::vector<float> input_vec = { 1.f, 0.f, 5.f, 1.5f,
                                      2.f, 0.f, 6.f, 5.2f };
@@ -70,6 +80,10 @@ TEST(tile_gpu, basic_in1x2x2x2_axis_b) {
     tile_ref<float>(input, output_ref, tile::along_b, 2);
 
     network network(engine, topology);
+//    build_options bo;
+//    bo.set_option(build_option::optimize_data(false));
+//    network network(engine, topology, bo);
+
     network.set_input_data("input", input);
 
     auto outputs = network.execute();
@@ -91,7 +105,16 @@ TEST(tile_gpu, basic_in1x2x2x2_axis_f) {
 
     topology topology;
     topology.add(input_layout("input", input->get_layout()));
-    topology.add(tile("tile", "input", tensor(1, 4, 2, 2)));
+
+    // reorder plain -> block
+    auto data_type = data_types::f32;
+    const auto target_format = format::b_fs_yx_fsv32;
+    topology.add(reorder("reordered_input", "input", target_format, data_type));
+
+    // reorder block -> plain
+    topology.add(tile("block_tile", "reordered_input", tensor(1, 4, 2, 2)));
+    const auto plain_format = format::bfyx;
+    topology.add(reorder("tile", "block_tile", plain_format, data_type));
 
     std::vector<float> input_vec = { 1.f, 0.f,
                                      5.f, 1.5f,
