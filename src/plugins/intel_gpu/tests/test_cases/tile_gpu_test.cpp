@@ -386,7 +386,6 @@ std::vector<Params<T>> generateTileParams3D() {
     return result;
 }
 
-
 struct PrintToStringParamName {
     template<class T>
     std::string operator()(const testing::TestParamInfo<ParamsWithLayout<T> > &param) {
