@@ -316,7 +316,47 @@ std::vector<Params<T>> generateTileParams2D() {
                     tensor(1, 2, 2, 2),
                     tile::along_b,
                     2,
-            }
+            },
+            {
+                    tensor( 1, 2, 2, 2),
+                    getValues<T>( { 1.f, 0.f,
+                                    5.f, 1.5f,
+
+                                    2.f, 0.f,
+                                    6.f, 5.2f }),
+                    tensor(1, 2, 2, 2),
+                    tile::along_f,
+                    2,
+            },
+            {
+                    tensor( 1, 2, 2, 2),
+                    getValues<T>( { 1.f, 0.f,
+                                    5.f, 1.5f,
+
+                                    2.f, 0.f,
+                                    6.f, 5.2f }),
+                    tensor(1, 2, 2, 4),
+                    tile::along_y,
+                    2,
+            },
+            {
+                    tensor( 1, 2, 2, 2),
+                    getValues<T>( { 1.f, 0.f,
+                                    5.f, 1.5f,
+
+                                    2.f, 0.f,
+                                    6.f, 5.2f }),
+                    tensor(1, 2, 4, 2),
+                    tile::along_x,
+                    2,
+            },
+            {
+                    tensor( 1, 2, 1, 2),
+                    getValues<T>( { 1.f, 0.f, 5.f, 1.5f}),
+                    tensor(1, 2, 4, 2),
+                    tile::along_x,
+                    4,
+            },
     };
     return result;
 }
