@@ -266,16 +266,17 @@ TEST(tile_gpu, basic_in1x2x2x2_axis_z) {
 
 
 template<typename T>
-struct TileParams {
-    tensor inputTensor;
+struct Params {
+    tensor input_tensor;
     std::vector<T> inputs;
-    tensor outputTensor;
-    std::vector<T> outputs;
+    tensor output_tensor;
+    tile::tile_axis output_axis;
+    int num_tiles;
 };
 
 template<typename T>
-using TileParamsWithLayout = std::tuple<
-        TileParams<T>,
+using ParamsWithLayout = std::tuple<
+        Params<T>,
         format::type,   // source (plain) layout - bfyx or bfzyx
         format::type    // target (blocked) layout
 >;
@@ -306,18 +307,40 @@ std::vector<T> getValues(const std::vector<float> &values) {
 }
 
 template<typename T>
-std::vector<TileParams<T>> generateTileParams2D() {
-    static const std::vector<TileParams<T>> result = {
-//            {
-//            }
+std::vector<Params<T>> generateTileParams2D() {
+    static const std::vector<Params<T>> result = {
+            {
+                    tensor( 1, 2, 2, 2),
+                    getValues<T>( { 1.f, 0.f, 5.f, 1.5f,
+                                    2.f, 0.f, 6.f, 5.2f }),
+                    tensor(1, 2, 2, 2),
+                    tile::along_b,
+                    2,
+            }
     };
     return result;
 }
 
 template<typename T>
-std::vector<TileParams<T>> generateTileParams3D() {
-    static const std::vector<TileParams<T>> result = {
+std::vector<Params<T>> generateTileParams3D() {
+    static const std::vector<Params<T>> result = {
             {
+                    {
+                            tensor( 1, 2, 2, 2, 2 ),
+                            getValues<T>( {
+                                                  1.f, 0.f,
+                                                  5.f, 1.5f,
+                                                  2.f, 0.f,
+                                                  6.f, 5.2f,
+                                                  1.f, 0.f,
+                                                  5.f, 1.5f,
+                                                  2.f, 0.f,
+                                                  6.f, 5.2f
+                                          }),
+                            tensor(1, 2, 2, 2, 4),
+                            tile::along_z,
+                            2,
+                    }
             }
     };
     return result;
@@ -326,44 +349,140 @@ std::vector<TileParams<T>> generateTileParams3D() {
 
 struct PrintToStringParamName {
     template<class T>
-    std::string operator()(const testing::TestParamInfo<TileParamsWithLayout<T> > &param) {
+    std::string operator()(const testing::TestParamInfo<ParamsWithLayout<T> > &param) {
         std::stringstream buf;
-        TileParams<T> p;
+        Params<T> p;
         format::type plain_layout;
         format::type target_layout;
         std::tie(p, plain_layout, target_layout) = param.param;
-        buf << " input tensor " << p.inputTensor.to_string()
-            << " output tensor " << p.outputTensor.to_string()
+        buf << " input tensor " << p.input_tensor.to_string()
+            << " output tensor " << p.output_tensor.to_string()
             << " plain layout " << plain_layout
-            << " target layout " << target_layout;
+            << " target layout " << target_layout
+            << " number Tiles " << p.num_tiles
+            << " axis " << p.output_axis;
         return buf.str();
     }
 };
 
 template<typename T>
 struct tile_test
-        : public ::testing::TestWithParam<TileParamsWithLayout<T> > {
+        : public ::testing::TestWithParam<ParamsWithLayout<T> > {
 public:
-void test() {
+    memory::ptr getOutputsRef(const memory::ptr input){
+        Params<T> params;
+        format::type plain_layout;
+        format::type target_layout;
+        std::tie(params, plain_layout, target_layout) = this->GetParam();
+        format::type fmt = plain_layout;
+        tensor output_size = params.output_tensor;
+        tile::tile_axis output_axis = params.output_axis;
+        int num_tiles = params.num_tiles;
+
+        const auto data_type = type_to_data_type<T>::value;
+        auto& engine = get_test_engine();
+
+        auto output = engine.allocate_memory({ data_type, fmt, output_size});
+
+        tile_ref<T>(input, output, output_axis, num_tiles);
+
+        return output;
+    }
+
+    void test() {
+    const auto data_type = type_to_data_type<T>::value;
+    Params<T> params;
+    format::type plain_layout;
+    format::type target_layout;
+
+    std::tie(params, plain_layout, target_layout) = this->GetParam();
+
+    const bool need_reorder = target_layout != plain_layout;
+
+    auto& engine = get_test_engine();
+
+    auto input = engine.allocate_memory({data_type, plain_layout, params.input_tensor});
+
+    set_values(input, params.inputs);
+
+    const std::string input_data_id = "input_id";
+    topology topology;
+    topology.add(input_layout(input_data_id, input->get_layout()));
+
+    std::string input_id = input_data_id;
+    if (need_reorder) {
+        const std::string reorder_input_id = input_data_id + "_reordered";
+        topology.add(reorder(reorder_input_id, input_data_id, target_layout, data_type));
+        input_id = reorder_input_id;
+    }
+
+    const std::string result_data_id = "result_id";
+    topology.add(tile(result_data_id, input_id, params.output_tensor));
+
+    std::string result_id = result_data_id;
+    if (need_reorder) {
+        const primitive_id reorder_result_id = result_data_id + "_reordered";
+        topology.add(reorder(reorder_result_id, result_data_id, plain_layout, data_type));
+        result_id = reorder_result_id;
+    }
+
+    network network(engine, topology);
+
+    network.set_input_data(input_data_id, input);
+
+    auto result = network.execute();
+
+    auto out_mem = result.at(result_id).get_memory();
+    cldnn::mem_lock<T> out_ptr(out_mem, get_test_stream());
+    ASSERT_EQ(params.output_tensor.count(), out_ptr.size());
+
+    auto output_ref = getOutputsRef(input);
+    cldnn::mem_lock<T> output_ref_ptr(output_ref, get_test_stream());
+    for (size_t i = 0; i < output_ref_ptr.size(); ++i) {
+        EXPECT_NEAR(output_ref_ptr[i], out_ptr[i], 0.005) << "at i = " << i;
+    }
 }
 };
 
 using tile_test_f32 = tile_test<float>;
 using tile_test_f16 = tile_test<half_t>;
 
-TEST_P(tile_test_f32 , tile_test_f32){
+TEST_P(tile_test_f32, test_case){
     ASSERT_NO_FATAL_FAILURE(test());
 }
 
-TEST_P(tile_test_f16, tile_test_f16) {
+TEST_P(tile_test_f16, test_case) {
     ASSERT_NO_FATAL_FAILURE(test());
 }
 
-
-INSTANTIATE_TEST_SUITE_P(tile_gpu,
-                         tile_test_f32 ,
+INSTANTIATE_TEST_SUITE_P(tile_gpu_2D,
+                         tile_test_f32,
                          ::testing::Combine(
                                  ::testing::ValuesIn(generateTileParams2D<float>()),
                                  ::testing::Values(format::bfyx),
                                  ::testing::ValuesIn(layouts_2d)),
+                         PrintToStringParamName());
+
+INSTANTIATE_TEST_SUITE_P(tile_gpu_2D,
+                         tile_test_f16,
+                         ::testing::Combine(
+                                 ::testing::ValuesIn(generateTileParams2D<half_t>()),
+                                 ::testing::Values(format::bfyx),
+                                 ::testing::ValuesIn(layouts_2d)),
+                         PrintToStringParamName());
+
+INSTANTIATE_TEST_SUITE_P(tile_gpu_3D,
+                         tile_test_f32,
+                         ::testing::Combine(
+                                 ::testing::ValuesIn(generateTileParams3D<float>()),
+                                 ::testing::Values(format::bfzyx),
+                                 ::testing::ValuesIn(layouts_3d)),
+                         PrintToStringParamName());
+
+INSTANTIATE_TEST_SUITE_P(tile_gpu_3D,
+                         tile_test_f16,
+                         ::testing::Combine(
+                                 ::testing::ValuesIn(generateTileParams3D<half_t>()),
+                                 ::testing::Values(format::bfzyx),
+                                 ::testing::ValuesIn(layouts_3d)),
                          PrintToStringParamName());
