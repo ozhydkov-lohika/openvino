@@ -80,9 +80,6 @@ TEST(tile_gpu, basic_in1x2x2x2_axis_b) {
     tile_ref<float>(input, output_ref, tile::along_b, 2);
 
     network network(engine, topology);
-//    build_options bo;
-//    bo.set_option(build_option::optimize_data(false));
-//    network network(engine, topology, bo);
 
     network.set_input_data("input", input);
 
@@ -266,3 +263,107 @@ TEST(tile_gpu, basic_in1x2x2x2_axis_z) {
         EXPECT_EQ(output_ptr[i], output_ref_ptr[i]) << "Index=" << i;
     }
 }
+
+
+template<typename T>
+struct TileParams {
+    tensor inputTensor;
+    std::vector<T> inputs;
+    tensor outputTensor;
+    std::vector<T> outputs;
+};
+
+template<typename T>
+using TileParamsWithLayout = std::tuple<
+        TileParams<T>,
+        format::type,   // source (plain) layout - bfyx or bfzyx
+        format::type    // target (blocked) layout
+>;
+
+const std::vector<format::type> layouts_2d = {
+        format::bfyx,
+        format::b_fs_yx_fsv16,
+        format::b_fs_yx_fsv32,
+        format::bs_fs_yx_bsv16_fsv16,
+        format::bs_fs_yx_bsv32_fsv16,
+        format::bs_fs_yx_bsv32_fsv32
+};
+
+const std::vector<format::type> layouts_3d = {
+        format::bfzyx,
+        format::b_fs_zyx_fsv16,
+        format::b_fs_zyx_fsv32,
+        format::bs_fs_zyx_bsv16_fsv32,
+        format::bs_fs_zyx_bsv16_fsv16,
+        format::bs_fs_zyx_bsv32_fsv32,
+        format::bs_fs_zyx_bsv32_fsv16
+};
+
+template<typename T>
+std::vector<T> getValues(const std::vector<float> &values) {
+    std::vector<T> result(values.begin(), values.end());
+    return result;
+}
+
+template<typename T>
+std::vector<TileParams<T>> generateTileParams2D() {
+    static const std::vector<TileParams<T>> result = {
+//            {
+//            }
+    };
+    return result;
+}
+
+template<typename T>
+std::vector<TileParams<T>> generateTileParams3D() {
+    static const std::vector<TileParams<T>> result = {
+            {
+            }
+    };
+    return result;
+}
+
+
+struct PrintToStringParamName {
+    template<class T>
+    std::string operator()(const testing::TestParamInfo<TileParamsWithLayout<T> > &param) {
+        std::stringstream buf;
+        TileParams<T> p;
+        format::type plain_layout;
+        format::type target_layout;
+        std::tie(p, plain_layout, target_layout) = param.param;
+        buf << " input tensor " << p.inputTensor.to_string()
+            << " output tensor " << p.outputTensor.to_string()
+            << " plain layout " << plain_layout
+            << " target layout " << target_layout;
+        return buf.str();
+    }
+};
+
+template<typename T>
+struct tile_test
+        : public ::testing::TestWithParam<TileParamsWithLayout<T> > {
+public:
+void test() {
+}
+};
+
+using tile_test_f32 = tile_test<float>;
+using tile_test_f16 = tile_test<half_t>;
+
+TEST_P(tile_test_f32 , tile_test_f32){
+    ASSERT_NO_FATAL_FAILURE(test());
+}
+
+TEST_P(tile_test_f16, tile_test_f16) {
+    ASSERT_NO_FATAL_FAILURE(test());
+}
+
+
+INSTANTIATE_TEST_SUITE_P(tile_gpu,
+                         tile_test_f32 ,
+                         ::testing::Combine(
+                                 ::testing::ValuesIn(generateTileParams2D<float>()),
+                                 ::testing::Values(format::bfyx),
+                                 ::testing::ValuesIn(layouts_2d)),
+                         PrintToStringParamName());
