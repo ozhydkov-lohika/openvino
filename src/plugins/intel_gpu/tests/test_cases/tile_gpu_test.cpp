@@ -244,6 +244,7 @@ TEST(tile_gpu, basic_in1x2x2x2_axis_z) {
     }
 }
 
+namespace {
 template<typename T>
 struct Params {
     tensor input_tensor;
@@ -253,7 +254,6 @@ struct Params {
     int num_tiles;
 };
 
-namespace {
 template<typename T>
 using ParamsWithLayout = std::tuple<
         Params<T>,
