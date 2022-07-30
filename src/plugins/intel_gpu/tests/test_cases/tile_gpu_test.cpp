@@ -250,6 +250,7 @@ struct Params {
     tensor input_tensor;
     std::vector<T> inputs;
     tensor output_tensor;
+    std::vector<T> outputs;
     tile::tile_axis output_axis;
     int num_tiles;
 };
@@ -294,6 +295,7 @@ std::vector<Params<T>> generateTileParams2D() {
                     getValues<T>({1.f, 0.f, 5.f, 1.5f,
                                   2.f, 0.f, 6.f, 5.2f}),
                     tensor(1, 2, 2, 2),
+                    getValues<T>({ 1.f, 0.f, 5.f, 1.5f, 2.f, 0.f, 6.f, 5.2f, }),
                     tile::along_b,
                     2,
             },
@@ -305,6 +307,7 @@ std::vector<Params<T>> generateTileParams2D() {
                                   2.f, 0.f,
                                   6.f, 5.2f}),
                     tensor(1, 2, 2, 2),
+                    getValues<T>({ 1.f, 0.f, 5.f, 1.5f, 2.f, 0.f, 6.f, 5.2f, }),
                     tile::along_f,
                     2,
             },
@@ -316,6 +319,7 @@ std::vector<Params<T>> generateTileParams2D() {
                                   2.f, 0.f,
                                   6.f, 5.2f}),
                     tensor(1, 2, 2, 4),
+                    getValues<T>({ 1.f, 0.f, 5.f, 1.5f, 1.f, 0.f, 5.f, 1.5f, 2.f, 0.f, 6.f, 5.2f, 2.f, 0.f, 6.f, 5.2f, }),
                     tile::along_y,
                     2,
             },
@@ -327,6 +331,7 @@ std::vector<Params<T>> generateTileParams2D() {
                                   2.f, 0.f,
                                   6.f, 5.2f}),
                     tensor(1, 2, 4, 2),
+                    getValues<T>({ 1.f, 0.f, 1.f, 0.f, 5.f, 1.5f, 5.f, 1.5f, 2.f, 0.f, 2.f, 0.f, 6.f, 5.2f, 6.f, 5.2f, }),
                     tile::along_x,
                     2,
             },
@@ -334,6 +339,7 @@ std::vector<Params<T>> generateTileParams2D() {
                     tensor(1, 2, 1, 2),
                     getValues<T>({1.f, 0.f, 5.f, 1.5f}),
                     tensor(1, 2, 4, 2),
+                    getValues<T>({ 1.f, 1.f, 1.f, 1.f, 0.f, 0.f, 0.f, 0.f, 5.f, 5.f, 5.f, 5.f, 1.5f, 1.5f, 1.5f, 1.5f, }),
                     tile::along_x,
                     4,
             },
@@ -358,6 +364,7 @@ std::vector<Params<T>> generateTileParams3D() {
                                                  6.f, 5.2f
                                          }),
                             tensor(1, 2, 2, 2, 4),
+                            getValues<T>({ 1.f, 0.f, 5.f, 1.5f, 2.f, 0.f, 6.f, 5.2f, 1.f, 0.f, 5.f, 1.5f, 2.f, 0.f, 6.f, 5.2f, 1.f, 0.f, 5.f, 1.5f, 2.f, 0.f, 6.f, 5.2f, 1.f, 0.f, 5.f, 1.5f, 2.f, 0.f, 6.f, 5.2f, }),
                             tile::along_z,
                             2,
                     },
@@ -374,6 +381,8 @@ std::vector<Params<T>> generateTileParams3D() {
                                                  6.f, 5.2f
                                          }),
                             tensor(1, 2, 2, 2, 2),
+                            getValues<T>({ 1.f, 0.f, 5.f, 1.5f, 2.f, 0.f, 6.f, 5.2f, 1.f, 0.f, 5.f, 1.5f, 2.f, 0.f, 6.f, 5.2f, }),
+
                             tile::along_b,
                             2,
                     },
@@ -390,6 +399,8 @@ std::vector<Params<T>> generateTileParams3D() {
                                                  6.f, 5.2f
                                          }),
                             tensor(1, 2, 2, 2, 2),
+                            getValues<T>({ 1.f, 0.f, 5.f, 1.5f, 2.f, 0.f, 6.f, 5.2f, 1.f, 0.f, 5.f, 1.5f, 2.f, 0.f, 6.f, 5.2f, }),
+
                             tile::along_f,
                             2,
                     },
@@ -406,7 +417,27 @@ std::vector<Params<T>> generateTileParams3D() {
                                                  6.f, 5.2f
                                          }),
                             tensor(1, 2, 2, 4, 2),
+                            getValues<T>({ 1.f, 0.f, 5.f, 1.5f, 1.f, 0.f, 5.f, 1.5f, 2.f, 0.f, 6.f, 5.2f, 2.f, 0.f, 6.f, 5.2f, 1.f, 0.f, 5.f, 1.5f, 1.f, 0.f, 5.f, 1.5f, 2.f, 0.f, 6.f, 5.2f, 2.f, 0.f, 6.f, 5.2f, }),
+
                             tile::along_y,
+                            2,
+                    },
+                    {
+                            tensor(1, 2, 2, 2, 2),
+                            getValues<T>({
+                                                 1.f, 0.f,
+                                                 5.f, 1.5f,
+                                                 2.f, 0.f,
+                                                 6.f, 5.2f,
+                                                 1.f, 0.f,
+                                                 5.f, 1.5f,
+                                                 2.f, 0.f,
+                                                 6.f, 5.2f
+                                         }),
+                            tensor(1, 2, 4, 2, 2),
+                            getValues<T>({ 1.f, 0.f, 1.f, 0.f, 5.f, 1.5f, 5.f, 1.5f, 2.f, 0.f, 2.f, 0.f, 6.f, 5.2f, 6.f, 5.2f, 1.f, 0.f, 1.f, 0.f, 5.f, 1.5f, 5.f, 1.5f, 2.f, 0.f, 2.f, 0.f, 6.f, 5.2f, 6.f, 5.2f, }),
+
+                            tile::along_x,
                             2,
                     }
             }
@@ -483,21 +514,21 @@ public:
         auto out_mem = result.at(result_id).get_memory();
         cldnn::mem_lock<T> out_ptr(out_mem, get_test_stream());
 
-#pragma GCC diagnostic ignored "-Wunused-variable"
-        auto output_tensor_count =params.output_tensor.count();
-        auto out_ptr_size = out_ptr.size();
-
         ASSERT_EQ(params.output_tensor.count(), out_ptr.size());
 
         auto output_ref = getOutputsRef(input);
 
         cldnn::mem_lock<T> output_ref_ptr(output_ref, get_test_stream());
-        auto output_ref_ptr_size = output_ref_ptr.size();
 
         for (size_t i = 0; i < output_ref_ptr.size(); ++i) {
             EXPECT_NEAR(output_ref_ptr[i], out_ptr[i], 0.005) << "at i = " << i;
         }
+
+        for (size_t i = 0; i < params.outputs.size(); ++i) {
+            EXPECT_NEAR(params.outputs[i], out_ptr[i], 0.005) << "at i = " << i;
+        }
     }
+
 private:
     memory::ptr getOutputsRef(const memory::ptr input){
         Params<T> params;
