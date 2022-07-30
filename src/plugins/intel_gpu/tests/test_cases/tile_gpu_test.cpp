@@ -363,23 +363,6 @@ std::vector<Params<T>> generateTileParams3D() {
                                                  2.f, 0.f,
                                                  6.f, 5.2f
                                          }),
-                            tensor(1, 2, 2, 2, 4),
-                            getValues<T>({ 1.f, 0.f, 5.f, 1.5f, 2.f, 0.f, 6.f, 5.2f, 1.f, 0.f, 5.f, 1.5f, 2.f, 0.f, 6.f, 5.2f, 1.f, 0.f, 5.f, 1.5f, 2.f, 0.f, 6.f, 5.2f, 1.f, 0.f, 5.f, 1.5f, 2.f, 0.f, 6.f, 5.2f, }),
-                            tile::along_z,
-                            2,
-                    },
-                    {
-                            tensor(1, 2, 2, 2, 2),
-                            getValues<T>({
-                                                 1.f, 0.f,
-                                                 5.f, 1.5f,
-                                                 2.f, 0.f,
-                                                 6.f, 5.2f,
-                                                 1.f, 0.f,
-                                                 5.f, 1.5f,
-                                                 2.f, 0.f,
-                                                 6.f, 5.2f
-                                         }),
                             tensor(1, 2, 2, 2, 2),
                             getValues<T>({ 1.f, 0.f, 5.f, 1.5f, 2.f, 0.f, 6.f, 5.2f, 1.f, 0.f, 5.f, 1.5f, 2.f, 0.f, 6.f, 5.2f, }),
 
@@ -416,10 +399,10 @@ std::vector<Params<T>> generateTileParams3D() {
                                                  2.f, 0.f,
                                                  6.f, 5.2f
                                          }),
-                            tensor(1, 2, 2, 4, 2),
-                            getValues<T>({ 1.f, 0.f, 5.f, 1.5f, 1.f, 0.f, 5.f, 1.5f, 2.f, 0.f, 6.f, 5.2f, 2.f, 0.f, 6.f, 5.2f, 1.f, 0.f, 5.f, 1.5f, 1.f, 0.f, 5.f, 1.5f, 2.f, 0.f, 6.f, 5.2f, 2.f, 0.f, 6.f, 5.2f, }),
+                            tensor(1, 2, 4, 2, 2),
+                            getValues<T>({ 1.f, 0.f, 1.f, 0.f, 5.f, 1.5f, 5.f, 1.5f, 2.f, 0.f, 2.f, 0.f, 6.f, 5.2f, 6.f, 5.2f, 1.f, 0.f, 1.f, 0.f, 5.f, 1.5f, 5.f, 1.5f, 2.f, 0.f, 2.f, 0.f, 6.f, 5.2f, 6.f, 5.2f, }),
 
-                            tile::along_y,
+                            tile::along_x,
                             2,
                     },
                     {
@@ -434,12 +417,29 @@ std::vector<Params<T>> generateTileParams3D() {
                                                  2.f, 0.f,
                                                  6.f, 5.2f
                                          }),
-                            tensor(1, 2, 4, 2, 2),
-                            getValues<T>({ 1.f, 0.f, 1.f, 0.f, 5.f, 1.5f, 5.f, 1.5f, 2.f, 0.f, 2.f, 0.f, 6.f, 5.2f, 6.f, 5.2f, 1.f, 0.f, 1.f, 0.f, 5.f, 1.5f, 5.f, 1.5f, 2.f, 0.f, 2.f, 0.f, 6.f, 5.2f, 6.f, 5.2f, }),
+                            tensor(1, 2, 2, 4, 2),
+                            getValues<T>({ 1.f, 0.f, 5.f, 1.5f, 1.f, 0.f, 5.f, 1.5f, 2.f, 0.f, 6.f, 5.2f, 2.f, 0.f, 6.f, 5.2f, 1.f, 0.f, 5.f, 1.5f, 1.f, 0.f, 5.f, 1.5f, 2.f, 0.f, 6.f, 5.2f, 2.f, 0.f, 6.f, 5.2f, }),
 
-                            tile::along_x,
+                            tile::along_y,
                             2,
-                    }
+                    },
+                    {
+                        tensor(1, 2, 2, 2, 2),
+                                getValues<T>({
+                                                     1.f, 0.f,
+                                                     5.f, 1.5f,
+                                                     2.f, 0.f,
+                                                     6.f, 5.2f,
+                                                     1.f, 0.f,
+                                                     5.f, 1.5f,
+                                                     2.f, 0.f,
+                                                     6.f, 5.2f
+                                             }),
+                                tensor(1, 2, 2, 2, 4),
+                                getValues<T>({ 1.f, 0.f, 5.f, 1.5f, 2.f, 0.f, 6.f, 5.2f, 1.f, 0.f, 5.f, 1.5f, 2.f, 0.f, 6.f, 5.2f, 1.f, 0.f, 5.f, 1.5f, 2.f, 0.f, 6.f, 5.2f, 1.f, 0.f, 5.f, 1.5f, 2.f, 0.f, 6.f, 5.2f, }),
+                                tile::along_z,
+                                2,
+                    },
             }
     };
     return result;
